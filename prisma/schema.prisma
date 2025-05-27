@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["relationJoins"]
 }
 
 datasource db {
@@ -17,7 +18,7 @@ model User {
   firstName String?
   lastName  String?
   avatar    String?
-  
+
   // Authentication
   password     String
   isActive     Boolean @default(false)
@@ -26,25 +27,25 @@ model User {
   passwordResetToken String?
   passwordResetExpires DateTime?
   lastLoginAt  DateTime?
-  
+
   // 2FA
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret  String?
   backupCodes      String[]
-  
+
   // Metadata
   metadata     Json?
   preferences  Json?
-  
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
   roles        UserRole[]
   sessions     UserSession[]
   auditLogs    AuditLog[]
-  
+
   @@map("users")
 }
 
@@ -54,27 +55,27 @@ model Role {
   displayName String
   description String?
   color       String?
-  
+
   // Permissions as JSON array for flexibility
   permissions Json
-  
+
   // Hierarchy
   parentId String?
   parent   Role?  @relation("RoleHierarchy", fields: [parentId], references: [id])
   children Role[] @relation("RoleHierarchy")
-  
+
   // Metadata
   isSystem   Boolean @default(false)
   isActive   Boolean @default(true)
   metadata   Json?
-  
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   // Relations
   users UserRole[]
-  
+
   @@map("roles")
 }
 
@@ -82,20 +83,20 @@ model UserRole {
   id     String @id @default(nanoid())
   userId String
   roleId String
-  
+
   // Optional expiration for temporary roles
   expiresAt DateTime?
-  
+
   // Who assigned this role
   assignedBy String?
   assignedAt DateTime @default(now())
-  
+
   // Metadata for role assignment
   metadata Json?
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  
+
   @@unique([userId, roleId])
   @@map("user_roles")
 }
@@ -107,22 +108,22 @@ model UserSession {
   fingerprint  String?
   ipAddress    String?
   userAgent    String?
-  
+
   // Session metadata
   isActive     Boolean  @default(true)
   lastUsedAt   DateTime @default(now())
   expiresAt    DateTime
-  
+
   // Device info
   deviceType   String?
   deviceName   String?
   location     Json?
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@map("user_sessions")
 }
 
@@ -132,26 +133,26 @@ model AuditLog {
   action    String
   resource  String
   resourceId String?
-  
+
   // Request details
   method     String?
   endpoint   String?
   ipAddress  String
   userAgent  String?
-  
+
   // Data changes
   oldData    Json?
   newData    Json?
   metadata   Json?
-  
+
   // Status
   success    Boolean
   errorMessage String?
-  
+
   createdAt  DateTime @default(now())
-  
+
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+
   @@index([userId])
   @@index([action])
   @@index([resource])
@@ -166,7 +167,7 @@ model RevokedToken {
   reason    String?
   revokedAt DateTime @default(now())
   expiresAt DateTime
-  
+
   @@index([jti])
   @@index([expiresAt])
   @@map("revoked_tokens")
@@ -178,13 +179,13 @@ model Setting {
   key   String @unique
   value Json
   type  String // 'string', 'number', 'boolean', 'json'
-  
+
   description String?
   isPublic    Boolean @default(false)
   isSystem    Boolean @default(false)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@map("settings")
 }
