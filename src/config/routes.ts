@@ -3,9 +3,22 @@ import { userRoutes } from '@/routes/user.routes.js'
 import { roleRoutes } from '@/routes/role.routes.js'
 //import { adminRoutes } from '@/routes/admin.routes.js'
 import { AppServer } from '@/types/server'
+import { db } from '@/utils/database'
 
 export async function registerRoutes(server: AppServer) {
-  // Register all route modules with API version prefix
+  // Health check endpoint
+  server.get('/health', async () => {
+    const dbHealth = await db.isHealthy()
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      version: process.env.npm_package_version || '1.0.0',
+      database: dbHealth
+    }
+  })
+
+  // api/v1 routes -  Register all route modules with API version prefix
   await server.register(
     async function (server) {
       // Authentication routes - Public and protected auth endpoints

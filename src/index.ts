@@ -4,8 +4,8 @@ import { registerPlugins } from '@/config/plugins.js'
 import { registerRoutes } from '@/config/routes.js'
 import { logger } from '@/utils/logger.js'
 import { gracefulShutdown } from '@/utils/graceful-shutdown.js'
-import { db} from '@/utils/database.js'
-import { AppServer } from "@/types/server";
+import { db } from '@/utils/database.js'
+import { AppServer } from '@/types/server'
 
 const server: AppServer = Fastify({
   logger: logger,
@@ -22,22 +22,10 @@ async function start() {
     // Register plugins first
     await registerPlugins(server)
 
-   await db.connect()
+    await db.connect()
 
     // Then register routes
     await registerRoutes(server)
-
-    // Health check endpoint
-    server.get('/health', async () => {
-      const dbHealth = await db.isHealthy()
-     return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
-       database: dbHealth
-     }
-    })
 
     // Global error handler
     server.setErrorHandler(async (error, request, reply) => {
@@ -45,9 +33,7 @@ async function start() {
 
       if (reply.statusCode >= 500) {
         // Don't leak error details in production
-        const message = config.isDevelopment
-          ? error.message
-          : 'Internal Server Error'
+        const message = config.isDevelopment ? error.message : 'Internal Server Error'
 
         return reply.send({
           error: 'Internal Server Error',
@@ -82,7 +68,6 @@ async function start() {
 
     // Setup graceful shutdown
     gracefulShutdown(server)
-
   } catch (error) {
     logger.error(error, 'Failed to start server')
     process.exit(1)
@@ -90,7 +75,7 @@ async function start() {
 }
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   logger.fatal(error, 'Uncaught exception')
   process.exit(1)
 })

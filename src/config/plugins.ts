@@ -1,4 +1,3 @@
-import type { FastifyInstance } from 'fastify'
 import cors from '@fastify/cors'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
@@ -13,6 +12,8 @@ import jwt from '@fastify/jwt'
 
 import { config } from './config.js'
 import { AppServer } from '@/types/server.js'
+import { db } from '@/utils/database'
+
 //import { redisClient } from '@/utils/redis.js'
 
 export async function registerPlugins(server: AppServer) {
@@ -66,6 +67,7 @@ export async function registerPlugins(server: AppServer) {
       // Check database connection
       try {
         //await redisClient.ping()
+        await db.isHealthy()
         return true
       } catch {
         return false
@@ -103,6 +105,7 @@ export async function registerPlugins(server: AppServer) {
 
   // Utility plugins
   await server.register(sensible)
+
   await server.register(cookie, {
     secret: config.security.sessionSecret,
     parseOptions: {
@@ -113,6 +116,7 @@ export async function registerPlugins(server: AppServer) {
   })
 
   await server.register(formbody)
+
   await server.register(multipart, {
     limits: {
       fileSize: config.upload.maxFileSize
