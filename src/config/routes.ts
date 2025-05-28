@@ -1,113 +1,14 @@
 import { authRoutes } from '@/routes/auth.routes.js'
 import { userRoutes } from '@/routes/user.routes.js'
 import { roleRoutes } from '@/routes/role.routes.js'
-//import { adminRoutes } from '@/routes/admin.routes.js'
 import { AppServer } from '@/types/server'
 import { db } from '@/utils/database'
+import logger from '@/utils/logger'
 
 export async function registerRoutes(server: AppServer) {
-  // Health check endpoint
-  server.get('/health', async () => {
-    const dbHealth = await db.isHealthy()
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0',
-      database: dbHealth
-    }
-  })
-
-  // api/v1 routes -  Register all route modules with API version prefix
-  await server.register(
-    async (server) => {
-      // Authentication routes - Public and protected auth endpoints
-      await server.register(authRoutes, {
-        prefix: '/auth',
-        logLevel: 'info'
-      })
-
-      // User management routes - CRUD operations for users
-      await server.register(userRoutes, {
-        prefix: '/users',
-        logLevel: 'info'
-      })
-
-      // Role management routes - RBAC system management
-      await server.register(roleRoutes, {
-        prefix: '/roles',
-        logLevel: 'info'
-      })
-
-      // Add a general API info endpoint
-      server.get(
-        '/',
-        {
-          schema: {
-            description: 'API Information',
-            tags: ['General'],
-            response: {
-              200: {
-                type: 'object',
-                properties: {
-                  name: { type: 'string' },
-                  version: { type: 'string' },
-                  description: { type: 'string' },
-                  endpoints: {
-                    type: 'object',
-                    properties: {
-                      auth: { type: 'string' },
-                      users: { type: 'string' },
-                      roles: { type: 'string' },
-                      admin: { type: 'string' },
-                      documentation: { type: 'string' },
-                      health: { type: 'string' }
-                    }
-                  },
-                  features: {
-                    type: 'array',
-                    items: { type: 'string' }
-                  }
-                }
-              }
-            }
-          }
-        },
-        async (request, reply) => {
-          return reply.send({
-            name: 'Fastify Auth API',
-            version: '1.0.0',
-            description: 'Modern authentication API with RBAC and comprehensive user management',
-            endpoints: {
-              auth: '/api/v1/auth',
-              users: '/api/v1/users',
-              roles: '/api/v1/roles',
-              admin: '/api/v1/admin',
-              documentation: '/documentation',
-              health: '/health'
-            },
-            features: [
-              'JWT Authentication with Refresh Tokens',
-              'Two-Factor Authentication (TOTP)',
-              'Role-Based Access Control (RBAC)',
-              'Email Verification',
-              'Password Reset',
-              'Session Management',
-              'Audit Logging',
-              'Rate Limiting',
-              'Real-time Security Monitoring',
-              'Comprehensive Admin Dashboard'
-            ]
-          })
-        }
-      )
-    },
-    { prefix: '/api/v1' }
-  )
-
-  // Global error handler for API routes
+  // PRIMA registra gli error handlers dettagliati
   server.setErrorHandler(async (error, request, reply) => {
-    request.log.error(error, 'API Error occurred')
+    request.log.error(error, 'Request error occurred')
 
     // Handle validation errors
     if (error.validation) {
@@ -194,20 +95,134 @@ export async function registerRoutes(server: AppServer) {
     })
   })
 
-  // 404 handler for API routes
+  // 404 handler
   server.setNotFoundHandler(async (request, reply) => {
     return reply.code(404).send({
       error: 'Not Found',
-      message: `API endpoint ${request.method}:${request.url} not found`,
+      message: `Endpoint ${request.method}:${request.url} not found`,
       statusCode: 404,
       timestamp: new Date().toISOString(),
       requestId: request.id,
       suggestion: 'Check the API documentation at /documentation'
     })
   })
+
+  // Health check endpoint
+  server.get('/health', async () => {
+    const dbHealth = await db.isHealthy()
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      version: process.env.npm_package_version || '1.0.0',
+      database: dbHealth
+    }
+  })
+
+  // api/v1 routes - Register all route modules with API version prefix
+  await server.register(
+    async server => {
+      // Authentication routes - Public and protected auth endpoints
+      await server.register(authRoutes, {
+        prefix: '/auth',
+        logLevel: 'info'
+      })
+
+      // User management routes - CRUD operations for users
+      await server.register(userRoutes, {
+        prefix: '/users',
+        logLevel: 'info'
+      })
+
+      // Role management routes - RBAC system management
+      await server.register(roleRoutes, {
+        prefix: '/roles',
+        logLevel: 'info'
+      })
+
+      // Add a general API info endpoint
+      server.get(
+        '/',
+        {
+          schema: {
+            description: 'API Information',
+            tags: ['General'],
+            response: {
+              200: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string' },
+                  version: { type: 'string' },
+                  description: { type: 'string' },
+                  endpoints: {
+                    type: 'object',
+                    properties: {
+                      auth: { type: 'string' },
+                      users: { type: 'string' },
+                      roles: { type: 'string' },
+                      admin: { type: 'string' },
+                      documentation: { type: 'string' },
+                      health: { type: 'string' }
+                    }
+                  },
+                  features: {
+                    type: 'array',
+                    items: { type: 'string' }
+                  }
+                }
+              }
+            }
+          }
+        },
+        async (request, reply) => {
+          request.log.info('API info endpoint hit')
+
+          const response = {
+            name: 'Fastify Auth API',
+            version: '1.0.0',
+            description: 'Modern authentication API with RBAC and comprehensive user management',
+            endpoints: {
+              auth: '/api/v1/auth',
+              users: '/api/v1/users',
+              roles: '/api/v1/roles',
+              admin: '/api/v1/admin',
+              documentation: '/documentation',
+              health: '/health'
+            },
+            features: [
+              'JWT Authentication with Refresh Tokens',
+              'Two-Factor Authentication (TOTP)',
+              'Role-Based Access Control (RBAC)',
+              'Email Verification',
+              'Password Reset',
+              'Session Management',
+              'Audit Logging',
+              'Rate Limiting',
+              'Real-time Security Monitoring',
+              'Comprehensive Admin Dashboard'
+            ]
+          }
+
+          return reply.send(response)
+        }
+      )
+    },
+    { prefix: '/api/v1' }
+  )
+
+  // Test endpoint per debug
+  server.get('/test', async (request, reply) => {
+    logger.info('Test endpoint hit')
+    return reply.send({ message: 'Test endpoint working', timestamp: new Date().toISOString() })
+  })
+
+  // Log tutti i routes registrati
+  server.ready(() => {
+    logger.info('All routes registered successfully')
+  })
 }
 
-// Route summary for documentation
+// Route summary rimane uguale
 export const routeSummary = {
   '/api/v1/auth': {
     description: 'Authentication and user profile management',

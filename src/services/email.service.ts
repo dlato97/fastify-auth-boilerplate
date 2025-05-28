@@ -19,11 +19,6 @@ class EmailService {
   private transporter: Transporter
 
   constructor() {
-    // Verify connection on startup
-    this.verifyConnection().catch(error => {
-      logger.error('Failed to verify email connection:', error)
-    })
-
     this.transporter = createTransport({
       host: config.email.host,
       port: config.email.port,
@@ -40,6 +35,11 @@ class EmailService {
         ignoreTLS: true,
         requireTLS: false
       })
+    })
+
+    // Verify connection on startup
+    this.verifyConnection().catch(error => {
+      logger.error('Failed to verify email connection:', error)
     })
   }
 

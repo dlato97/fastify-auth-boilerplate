@@ -137,7 +137,7 @@ export function requireRoles(roles: string[]) {
         userId: request.user.id,
         requiredRoles: roles,
         userRoles,
-        endpoint: request.routerPath,
+        endpoint: request.routeOptions.schema,
         ip: request.ip
       })
 
@@ -177,7 +177,7 @@ export function requirePermissions(permissions: string[]) {
         requiredPermissions: permissions,
         missingPermissions,
         userPermissions: request.permissions,
-        endpoint: request.routerPath,
+        endpoint: request.routeOptions.schema,
         ip: request.ip
       })
 
@@ -207,7 +207,7 @@ export function requireSelfOrAdmin(userIdParam: string = 'id') {
       logSecurity('unauthorized_user_access', 'medium', {
         userId: request.user.id,
         targetUserId,
-        endpoint: request.routerPath,
+        endpoint: request.routeOptions.schema,
         ip: request.ip
       })
 
@@ -229,13 +229,13 @@ export function requireUserRateLimit(maxRequests: number = 100, windowMs: number
       })
     }
 
-    const key = `user_rate_limit:${request.user.id}:${request.routerPath}`
+    const key = `user_rate_limit:${request.user.id}:${request.routeOptions.schema}`
     const result = await redis.incrementRateLimit(key, Math.floor(windowMs / 1000), maxRequests)
 
     if (result.count > maxRequests) {
       logSecurity('user_rate_limit_exceeded', 'low', {
         userId: request.user.id,
-        endpoint: request.routerPath,
+        endpoint: request.routeOptions.schema,
         count: result.count,
         limit: maxRequests,
         ip: request.ip
@@ -351,7 +351,7 @@ export function requireOwnership(resourceType: string, resourceIdParam: string =
         userId: request.user.id,
         resourceType,
         resourceId,
-        endpoint: request.routerPath,
+        endpoint: request.routeOptions.schema,
         ip: request.ip
       })
 

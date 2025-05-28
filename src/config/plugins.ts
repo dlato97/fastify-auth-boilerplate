@@ -22,13 +22,13 @@ export async function registerPlugins(server: AppServer) {
     contentSecurityPolicy: config.isDevelopment
       ? false
       : {
-        directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: ["'self'"],
-          imgSrc: ["'self'", 'data:', 'https:']
+          directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", 'data:', 'https:']
+          }
         }
-      }
   })
 
   await server.register(cors, {
@@ -44,7 +44,7 @@ export async function registerPlugins(server: AppServer) {
     timeWindow: config.rateLimit.timeWindow,
     //redis: redisClient,
     keyGenerator: request => {
-      return `rate_limit:${request.ip}:${request.routerPath || 'unknown'}`
+      return `rate_limit:${request.ip}:${request.routeOptions.schema ? JSON.stringify(request.routeOptions.schema) : 'unknown'}`
     },
     errorResponseBuilder: (request, context) => ({
       error: 'Too Many Requests',
@@ -182,7 +182,7 @@ export async function registerPlugins(server: AppServer) {
 
   // Global request logging
   if (config.logging.enableRequestLogging) {
-    server.addHook('onRequest', request => {
+    server.addHook('onRequest', async request => {
       request.log.info(
         {
           method: request.method,
@@ -193,16 +193,27 @@ export async function registerPlugins(server: AppServer) {
         'Incoming request'
       )
     })
-
     server.addHook('onResponse', async (request, reply) => {
       request.log.info(
         {
           method: request.method,
           url: request.url,
           statusCode: reply.statusCode,
-          responseTime: reply.getResponseTime()
+          responseTime: reply.elapsedTime
         },
         'Request completed'
+      )
+    })
+
+    server.addHook('onError', async (request, _reply, error) => {
+      request.log.error(
+        {
+          method: request.method,
+          url: request.url,
+          error: error.message,
+          stack: error.stack
+        },
+        'Request failed with error'
       )
     })
   }
