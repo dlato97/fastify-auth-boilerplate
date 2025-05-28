@@ -1,5 +1,12 @@
 import 'fastify'
-import type { User, Role } from '@prisma/client'
+import type { Role, User } from '@prisma/client'
+import type { FastifyReply, FastifyRequest, HookHandlerDoneFunction } from 'fastify'
+
+export type PreHandlerHook = (
+  request: FastifyRequest,
+  reply: FastifyReply,
+  done?: HookHandlerDoneFunction
+) => Promise<void> | void
 
 export interface AuthUser extends User {
   roles: Array<{

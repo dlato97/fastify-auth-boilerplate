@@ -1,13 +1,12 @@
-import type { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 import { authService } from '@/services/auth.service.js'
 import { db, prisma } from '@/utils/database.js'
-import { authLogger, logAudit } from '@/utils/logger.js'
+import { authLogger } from '@/utils/logger.js'
 import {
-  userQuerySchema,
+  assignRoleSchema,
   createUserSchema,
   updateUserSchema,
-  assignRoleSchema,
-  paginationSchema
+  userQuerySchema
 } from '@/schemas/auth.schemas.js'
 
 export class UserController {

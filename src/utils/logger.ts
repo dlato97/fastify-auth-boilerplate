@@ -70,7 +70,7 @@ export const logResponse = (request: any, reply: any, additionalData?: Record<st
       method: request.method,
       url: request.url,
       statusCode: reply.statusCode,
-      responseTime: reply.getResponseTime(),
+      //responseTime: reply.getResponseTime(),
       ...additionalData
     },
     'HTTP Response'

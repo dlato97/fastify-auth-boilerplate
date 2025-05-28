@@ -1,18 +1,19 @@
-import type { FastifyRequest, FastifyReply } from 'fastify'
-import { jwtVerify } from 'jose'
+import type { FastifyReply, FastifyRequest } from 'fastify'
+import { JWTPayload, jwtVerify } from 'jose'
 
 import { config } from '@/config/config'
 import { db, prisma } from '@/utils/database'
 import { redis } from '@/utils/redis.js'
 import { authLogger, logSecurity } from '@/utils/logger'
+import { PreHandlerHook } from '@/types/fastify'
 
 // JWT verification utility
-async function verifyJWT(token: string): Promise<any> {
+async function verifyJWT(token: string): Promise<JWTPayload> {
   try {
     const secret = new TextEncoder().encode(config.jwt.accessSecret)
     const { payload } = await jwtVerify(token, secret)
     return payload
-  } catch (error) {
+  } catch {
     throw new Error('Invalid token')
   }
 }
@@ -44,6 +45,13 @@ export async function authenticate(request: FastifyRequest, reply: FastifyReply)
                 message: 'Token has been revoked'
             })
         }*/
+
+    if (!payload.sub) {
+      return reply.code(401).send({
+        error: 'Unauthorized',
+        message: 'Invalid token payload'
+      })
+    }
 
     // Get user with roles
     const user = await db.findUserById(payload.sub)
@@ -105,7 +113,7 @@ export async function optionalAuthenticate(request: FastifyRequest, reply: Fasti
     }
 
     await authenticate(request, reply)
-  } catch (error) {
+  } catch {
     // Silently continue without authentication
     return
   }
@@ -316,16 +324,18 @@ export function requireOwnership(resourceType: string, resourceIdParam: string =
       case 'user':
         isOwner = request.user.id === resourceId
         break
-      case 'session':
+      case 'session': {
         const session = await prisma.userSession.findUnique({
           where: { id: resourceId }
         })
         isOwner = session?.userId === request.user.id
         break
+      }
       // Add more resource types as needed
       default:
         // Generic check - assume resource has userId field
         try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
           const resource = await (prisma as any)[resourceType].findUnique({
             where: { id: resourceId },
             select: { userId: true }
@@ -391,7 +401,7 @@ export const authMiddleware = {
 }
 
 // Hook factories for easier usage
-export function createAuthHook(middleware: Function[]) {
+export function createAuthHook(middleware: PreHandlerHook[]) {
   return {
     preHandler: middleware
   }

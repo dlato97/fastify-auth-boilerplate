@@ -41,7 +41,7 @@
     },
     "types": ["node", "vitest/globals", "fastify"],
     "typeRoots": ["./node_modules/@types", "./types"],
-    "lib": ["ES2022"]
+    "lib": ["ES2022", "DOM"]
   },
   "include": [
     "src/**/*",

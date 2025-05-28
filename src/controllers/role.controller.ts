@@ -1,7 +1,8 @@
-import type { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 import { db, prisma } from '@/utils/database.js'
 import { authLogger } from '@/utils/logger.js'
-import { paginationSchema, createRoleSchema, updateRoleSchema } from '@/schemas/auth.schemas.js'
+import { createRoleSchema, paginationSchema, updateRoleSchema } from '@/schemas/auth.schemas.js'
+import { z } from 'zod'
 
 // Available permissions in the system
 const AVAILABLE_PERMISSIONS = {
@@ -67,11 +68,11 @@ export class RoleController {
     try {
       const query = paginationSchema
         .extend({
-          search: { optional: true },
-          isActive: { optional: true },
-          isSystem: { optional: true },
-          sortBy: { optional: true },
-          sortOrder: { optional: true }
+          search: z.string().optional(),
+          isActive: z.coerce.boolean().optional(), // Converte string -> boolean
+          isSystem: z.coerce.boolean().optional(),
+          sortBy: z.string().optional(),
+          sortOrder: z.enum(['asc', 'desc']).optional()
         })
         .parse(request.query)
 
@@ -486,7 +487,7 @@ export class RoleController {
       const { id } = request.params as { id: string }
       const query = paginationSchema
         .extend({
-          isActive: { optional: true }
+          isActive: z.boolean().optional()
         })
         .parse(request.query)
 
@@ -619,9 +620,9 @@ export class RoleController {
           displayName,
           description: description || `Copy of ${sourceRole.displayName}`,
           color: sourceRole.color,
-          permissions: sourceRole.permissions,
+          permissions: sourceRole.permissions || [],
           parentId: sourceRole.parentId,
-          metadata: sourceRole.metadata,
+          metadata: sourceRole.metadata || {},
           isSystem: false,
           isActive: true
         }

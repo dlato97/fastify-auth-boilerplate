@@ -1,7 +1,7 @@
-import { createTransport } from 'nodemailer'
 import type { Transporter } from 'nodemailer'
+import { createTransport } from 'nodemailer'
 import { config } from '@/config/config.js'
-import { emailLogger } from '@/utils/logger.js'
+import { emailLogger, logger } from '@/utils/logger.js'
 
 export interface EmailOptions {
   to: string
@@ -19,6 +19,11 @@ class EmailService {
   private transporter: Transporter
 
   constructor() {
+    // Verify connection on startup
+    this.verifyConnection().catch(error => {
+      logger.error('Failed to verify email connection:', error)
+    })
+
     this.transporter = createTransport({
       host: config.email.host,
       port: config.email.port,
@@ -36,9 +41,6 @@ class EmailService {
         requireTLS: false
       })
     })
-
-    // Verify connection on startup
-    this.verifyConnection()
   }
 
   private async verifyConnection(): Promise<void> {

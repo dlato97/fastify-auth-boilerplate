@@ -22,13 +22,13 @@ export async function registerPlugins(server: AppServer) {
     contentSecurityPolicy: config.isDevelopment
       ? false
       : {
-          directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'"],
-            imgSrc: ["'self'", 'data:', 'https:']
-          }
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:', 'https:']
         }
+      }
   })
 
   await server.register(cors, {
@@ -182,7 +182,7 @@ export async function registerPlugins(server: AppServer) {
 
   // Global request logging
   if (config.logging.enableRequestLogging) {
-    server.addHook('onRequest', async request => {
+    server.addHook('onRequest', request => {
       request.log.info(
         {
           method: request.method,

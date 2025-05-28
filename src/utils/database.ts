@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 import { config } from '@/config/config.js'
-import { logger, dbLogger } from './logger.js'
+import { dbLogger, logger } from './logger.js'
 
 // Create Prisma client with enhanced configuration
 export const prisma = new PrismaClient({
@@ -223,6 +223,7 @@ export const db = {
     newData?: any
     success: boolean
     errorMessage?: string
+    metadata?: Record<string, any>
   }) => {
     if (!config.features.auditLogs) return null
 

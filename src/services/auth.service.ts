@@ -6,7 +6,7 @@ import { config } from '@/config/config.js'
 import { db, prisma } from '@/utils/database.js'
 import { emailService } from './email.service.js'
 import { authLogger, logSecurity } from '@/utils/logger.js'
-import type { RegisterInput, LoginInput, ChangePasswordInput } from '@/schemas/auth.schemas.js'
+import type { ChangePasswordInput, LoginInput, RegisterInput } from '@/schemas/auth.schemas.js'
 
 export interface TokenPair {
   accessToken: string
@@ -85,7 +85,7 @@ export class AuthService {
       const secret = new TextEncoder().encode(config.jwt.refreshSecret)
       const { payload } = await jwtVerify(token, secret)
       return payload
-    } catch (error) {
+    } catch {
       throw new Error('Invalid refresh token')
     }
   }
@@ -314,7 +314,7 @@ export class AuthService {
   async refreshTokens(refreshToken: string, ipAddress: string): Promise<TokenPair> {
     try {
       // Verify refresh token
-      const payload = await this.verifyRefreshToken(refreshToken)
+      await this.verifyRefreshToken(refreshToken)
 
       // Find active session
       const session = await db.findActiveSession(refreshToken)

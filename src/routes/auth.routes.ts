@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { authController } from '@/controllers/auth.controller.js'
 import { authMiddleware } from '@/middleware/auth.middleware.js'
 
-export async function authRoutes(server: FastifyInstance) {
+export function authRoutes(server: FastifyInstance) {
   // Public authentication endpoints
   server.post(
     '/register',

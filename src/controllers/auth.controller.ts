@@ -1,17 +1,16 @@
-import type { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 import { authService } from '@/services/auth.service.js'
 import { db, prisma } from '@/utils/database.js'
-import { redis } from '@/utils/redis.js'
 import { authLogger } from '@/utils/logger.js'
 import {
-  registerSchema,
-  loginSchema,
-  forgotPasswordSchema,
-  resetPasswordSchema,
   changePasswordSchema,
-  verifyEmailSchema,
+  forgotPasswordSchema,
+  loginSchema,
   refreshTokenSchema,
-  updateProfileSchema
+  registerSchema,
+  resetPasswordSchema,
+  updateProfileSchema,
+  verifyEmailSchema
 } from '@/schemas/auth.schemas.js'
 
 export class AuthController {
@@ -60,11 +59,11 @@ export class AuthController {
       // If 2FA is required, return partial response
       if (result.requiresTwoFactor) {
         // Store user ID temporarily for 2FA verification
-        const tempToken = await redis.set(
+        /*const tempToken = await redis.set(
           `2fa_pending:${result.user.id}`,
           JSON.stringify({ userId: result.user.id, email: result.user.email }),
           300 // 5 minutes
-        )
+        )*/
 
         return reply.send({
           message: 'Two-factor authentication required',
@@ -303,7 +302,7 @@ export class AuthController {
       return reply.send({
         message: 'If an account with that email exists, a password reset link has been sent'
       })
-    } catch (error: any) {
+    } catch {
       // Always return success to prevent email enumeration
       return reply.send({
         message: 'If an account with that email exists, a password reset link has been sent'
@@ -473,7 +472,6 @@ export class AuthController {
         resource: 'user',
         resourceId: request.user.id,
         ipAddress: request.ip,
-        //@ts-ignore
         metadata: { terminatedCount: result.count },
         success: true
       })

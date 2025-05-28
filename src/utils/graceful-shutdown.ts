@@ -1,9 +1,9 @@
-import type { FastifyInstance } from 'fastify'
 import { logger } from './logger.js'
 //import { redisClient } from './redis.js'
-import {db, prisma} from './database.js'
+import { db, prisma } from './database.js'
+import { AppServer } from '@/types/server'
 
-export function gracefulShutdown(server: FastifyInstance) {
+export function gracefulShutdown(server: AppServer) {
   const gracefulShutdownHandler = async (signal: string) => {
     logger.info(`Received ${signal}, starting graceful shutdown...`)
 
@@ -42,10 +42,22 @@ export function gracefulShutdown(server: FastifyInstance) {
     }
   }
 
-  // Register shutdown handlers
-  process.on('SIGTERM', () => gracefulShutdownHandler('SIGTERM'))
-  process.on('SIGINT', () => gracefulShutdownHandler('SIGINT'))
+  const signals = ['SIGTERM', 'SIGINT', 'SIGUSR2'] as const
 
-  // Handle Docker stop
-  process.on('SIGUSR2', () => gracefulShutdownHandler('SIGUSR2'))
+  const handleGracefulShutdown = (signal: string) => {
+    gracefulShutdownHandler(signal)
+      .then(() => {
+        logger.info(`Graceful shutdown completed for ${signal}`)
+        process.exit(0)
+      })
+      .catch(error => {
+        logger.error(`Error during graceful shutdown (${signal}):`, error)
+        process.exit(1)
+      })
+  }
+
+  // Register all shutdown handlers
+  signals.forEach(signal => {
+    process.on(signal, () => handleGracefulShutdown(signal))
+  })
 }

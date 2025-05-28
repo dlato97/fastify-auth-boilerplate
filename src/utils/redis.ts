@@ -66,6 +66,7 @@ export const redis = {
       : redisClient.set(key, JSON.stringify(value)),
   getJSON: async <T>(key: string): Promise<T | null> => {
     const value = await redisClient.get(key)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return value ? JSON.parse(value) : null
   },
 

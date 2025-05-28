@@ -20,7 +20,7 @@ export async function registerRoutes(server: AppServer) {
 
   // api/v1 routes -  Register all route modules with API version prefix
   await server.register(
-    async function (server) {
+    async (server) => {
       // Authentication routes - Public and protected auth endpoints
       await server.register(authRoutes, {
         prefix: '/auth',

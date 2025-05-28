@@ -6,6 +6,7 @@ import { logger } from '@/utils/logger.js'
 import { gracefulShutdown } from '@/utils/graceful-shutdown.js'
 import { db } from '@/utils/database.js'
 import { AppServer } from '@/types/server'
+import * as crypto from 'node:crypto'
 
 const server: AppServer = Fastify({
   logger: logger,
@@ -85,4 +86,4 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1)
 })
 
-start()
+await start()
